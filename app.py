@@ -241,8 +241,8 @@ def add_wards_to_map(map_obj):
         # ---- STYLE: thin blue boundaries, transparent fill ----
         ward_style = {
             "color": "#0057ff",
-            "weight": 1,      # thinner lines (change to 0.8–1.5 if you like)
-            "opacity": 0.9,
+            "weight": 0.5,      # thinner lines (change to 0.8–1.5 if you like)
+            "opacity": 0.5,
             "fillOpacity": 0.0,
         }
 
@@ -540,3 +540,4 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
