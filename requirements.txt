@@ -1,0 +1,11 @@
+streamlit==1.28.0
+rasterio
+numpy
+folium
+streamlit-folium
+pandas
+matplotlib
+geopandas
+shapely
+pyproj
+fiona
