@@ -199,7 +199,7 @@ def add_wards_to_map(map_obj):
         st.write("**Looking for ward boundaries in:**")
         for path in possible_paths:
             exists = os.path.exists(path)
-            st.write(f"{'✅' if exists else '❌'} {path}")
+            # st.write(f"{'✅' if exists else '❌'} {path}")
 
         wards_path = next((p for p in possible_paths if os.path.exists(p)), None)
 
@@ -208,7 +208,7 @@ def add_wards_to_map(map_obj):
             maps_folder = os.path.join(BASE_DIR, "Classified_Maps")
             if os.path.exists(maps_folder):
                 files = os.listdir(maps_folder)
-                st.write(f"Files in Classified_Maps: {files}")
+                # st.write(f"Files in Classified_Maps: {files}")
             return
 
         st.info(f"📂 Loading wards from: {wards_path}")
@@ -547,3 +547,4 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
