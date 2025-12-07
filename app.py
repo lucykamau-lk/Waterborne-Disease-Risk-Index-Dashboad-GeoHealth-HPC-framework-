@@ -1,4 +1,4 @@
-fimport os
+import os
 import streamlit as st
 import rasterio
 import numpy as np
@@ -537,6 +537,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
