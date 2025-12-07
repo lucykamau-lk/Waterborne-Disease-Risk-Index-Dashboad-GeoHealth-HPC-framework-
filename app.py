@@ -179,7 +179,7 @@ def add_raster_to_map(map_obj, tif_path, name, opacity=0.7, layer_type="WSI"):
                 show=True,
             ).add_to(map_obj)
 
-            st.success(f"✅ Loaded {name}")
+            # st.success(f"✅ Loaded {name}")
             return True, bounds
 
     except Exception as e:
@@ -196,11 +196,6 @@ def add_wards_to_map(map_obj):
             os.path.join(BASE_DIR, "Classified_Maps", "Nairobi_Wards.geojson"),
         ]
 
-        st.write("**Looking for ward boundaries in:**")
-        for path in possible_paths:
-            exists = os.path.exists(path)
-            # st.write(f"{'✅' if exists else '❌'} {path}")
-
         wards_path = next((p for p in possible_paths if os.path.exists(p)), None)
 
         if wards_path is None:
@@ -211,7 +206,7 @@ def add_wards_to_map(map_obj):
                 # st.write(f"Files in Classified_Maps: {files}")
             return
 
-        st.info(f"📂 Loading wards from: {wards_path}")
+       # st.info(f"📂 Loading wards from: {wards_path}")
         gdf = gpd.read_file(wards_path)
         #st.success(f"✅ Loaded {len(gdf)} ward boundaries")
 
@@ -547,5 +542,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
 
 
