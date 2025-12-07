@@ -3,7 +3,7 @@ import streamlit as st
 import rasterio
 import numpy as np
 import folium
-from streamlit_folium import st_folium
+from streamlit_folium import st_folium  # no longer used, but safe to leave
 import pandas as pd
 from folium.plugins import MiniMap, Fullscreen, MeasureControl
 import matplotlib.colors as mcolors
@@ -166,7 +166,7 @@ def add_raster_to_map(map_obj, tif_path, name, opacity=0.7, layer_type="WSI"):
             rgba_img[..., 3] = alpha_mask
 
             folium.raster_layers.ImageOverlay(
-                image=rgba_img,  # Keep as numpy array for folium
+                image=rgba_img,
                 bounds=bounds,
                 name=name,
                 opacity=float(opacity),
@@ -184,9 +184,8 @@ def add_raster_to_map(map_obj, tif_path, name, opacity=0.7, layer_type="WSI"):
         return False, None
 
 def add_wards_to_map(map_obj):
-    """Add Nairobi ward boundaries"""
+    """Add Nairobi ward boundaries with NAME_3 labels and thin lines."""
     try:
-        # List all possible paths
         possible_paths = [
             os.path.join(BASE_DIR, "Classified_Maps", "Nairobi_Wards.shp"),
             os.path.join(BASE_DIR, "Classified_Maps", "Nairobi.geojson"),
@@ -206,7 +205,6 @@ def add_wards_to_map(map_obj):
         
         if wards_path is None:
             st.warning("⚠️ Nairobi_Wards shapefile/geojson not found")
-            # List what files ARE in Classified_Maps
             maps_folder = os.path.join(BASE_DIR, "Classified_Maps")
             if os.path.exists(maps_folder):
                 files = os.listdir(maps_folder)
@@ -218,57 +216,42 @@ def add_wards_to_map(map_obj):
         st.success(f"✅ Loaded {len(gdf)} ward boundaries")
         
         # Simplify geometries to reduce complexity
-        gdf['geometry'] = gdf['geometry'].simplify(0.001)
-        
-        # Find label field - prioritize NAME_3
+        gdf["geometry"] = gdf["geometry"].simplify(0.001)
+
+        # ---- PREFER NAME_3 FOR LABELS ----
         label_field = None
-        
-        # Check for NAME_3 first (case-insensitive)
-        for col in gdf.columns:
-            if col.upper() == "NAME_3":
-                label_field = col
-                break
-        
-        # If not found, try other name fields
-        if label_field is None:
-            possible_names = ["name", "ward", "ward_name", "name_1"]
+        if "NAME_3" in gdf.columns:
+            label_field = "NAME_3"
+        else:
+            possible_names = ["name_3", "ward", "ward_name", "name"]
             for col in gdf.columns:
-                if any(key in col.lower() for key in possible_names):
+                if col.lower() in possible_names:
                     label_field = col
                     break
-        
-        # Last resort: use first non-geometry column
+
         if label_field is None:
+            # last resort: any non-geometry column
             for col in gdf.columns:
                 if col.lower() != "geometry":
                     label_field = col
                     break
-        
+
         st.write(f"Using label field: {label_field}")
 
-        # Convert to GeoJSON with inline styles (no lambda functions)
-        geojson_dict = {
-            "type": "FeatureCollection",
-            "features": []
+        # ---- STYLE: thin blue boundaries, transparent fill ----
+        ward_style = {
+            "color": "#0057ff",
+            "weight": 1,      # thinner lines (change to 0.8–1.5 if you like)
+            "opacity": 0.9,
+            "fillOpacity": 0.0,
         }
-        
-        for _, row in gdf.iterrows():
-            feature = {
-                "type": "Feature",
-                "geometry": row['geometry'].__geo_interface__,
-                "properties": {label_field: row[label_field]} if label_field else {},
-                "style": {
-                    "color": "#000000",
-                    "weight": 0.8,  # Reduced from default
-                    "fillOpacity": 0.0,
-                }
-            }
-            geojson_dict["features"].append(feature)
 
-        # Use simple GeoJson without lambda functions
+        geojson_str = gdf.to_json()
+
         folium.GeoJson(
-            geojson_dict,
+            geojson_str,
             name="Nairobi Wards",
+            style_function=lambda feature: ward_style,
             tooltip=folium.features.GeoJsonTooltip(
                 fields=[label_field] if label_field else [],
                 aliases=["Ward:"] if label_field else [],
@@ -281,6 +264,7 @@ def add_wards_to_map(map_obj):
         st.error(f"❌ Error loading Nairobi_Wards layer: {e}")
         st.code(traceback.format_exc())
 
+# Session state for layer visibility
 if "layer_visibility" not in st.session_state:
     st.session_state.layer_visibility = {
         "WSI": True,
@@ -315,9 +299,9 @@ with st.sidebar:
 
     st.subheader("⚙️ Map Settings")
     zoom_level = st.slider("Zoom Level", 5, 18, 11)
-    show_measure = st.checkbox("Enable Measurement Tool", False)  # Changed to False
+    show_measure = st.checkbox("Enable Measurement Tool", False)
 
-# MAIN LAYOUT - 2 COLUMNS FOR LARGER MAP
+# MAIN LAYOUT - 2 COLUMNS
 col1, col2 = st.columns([8, 3], gap="small")
 
 with col1:
@@ -332,7 +316,6 @@ with col1:
             control_scale=True,
         )
 
-        # Only add minimal plugins
         if show_measure:
             try:
                 MeasureControl().add_to(m)
@@ -342,7 +325,6 @@ with col1:
 
         layer_bounds = []
 
-        # Layer file definitions
         MAPS_FOLDER = "Classified_Maps"
         layer_files = {
             "WSI": {
@@ -386,45 +368,32 @@ with col1:
         if show_wards:
             add_wards_to_map(m)
 
-        # Fit map bounds to visible layers - DON'T use m.fit_bounds (causes lambda issue)
+        # Fit map bounds to visible layers
         if layer_bounds:
             all_bounds = np.vstack(layer_bounds)
-            # Manually set the view instead of using fit_bounds
-            center_lat = float((all_bounds[:, 0].min() + all_bounds[:, 0].max()) / 2)
-            center_lon = float((all_bounds[:, 1].min() + all_bounds[:, 1].max()) / 2)
-            m.location = [center_lat, center_lon]
+            m.fit_bounds([
+                [float(all_bounds[:, 0].min()), float(all_bounds[:, 1].min())],
+                [float(all_bounds[:, 0].max()), float(all_bounds[:, 1].max())],
+            ])
 
-        # Don't add LayerControl - it may cause serialization issues
-        # folium.LayerControl(position="topright").add_to(m)
-        
-        # DEBUG: Show what layers were successfully added
+        # Debug info
         st.write("**Debug Info:**")
         st.write(f"Number of child elements in map: {len(m._children)}")
         st.write(f"Layer bounds collected: {len(layer_bounds)}")
         st.write(f"Show wards: {show_wards}")
-        
-        # Debug: Check each child element
         st.write("**Map children:**")
         for key, child in m._children.items():
             st.write(f"- {key}: {type(child).__name__}")
-        
-        # Display the map - with error handling
-        try:
-            st_folium(m, use_container_width=True, height=750, key="main_map")
-        except Exception as e:
-            st.error(f"Error rendering map: {str(e)}")
-            st.code(traceback.format_exc())
-            st.info("Trying to display map as HTML instead...")
-            # Fallback: display as iframe
-            map_html = m._repr_html_()
-            st.components.v1.html(map_html, height=750, scrolling=True)
-            
+
+        # ---- Render map as HTML (no st_folium, so no JSON error) ----
+        map_html = m._repr_html_()
+        st.components.v1.html(map_html, height=750, scrolling=True)
+
     except Exception as e:
         st.error(f"Critical error creating map: {str(e)}")
         st.code(traceback.format_exc())
 
 with col2:
-    # Create tabs for better organization
     tab1, tab2 = st.tabs(["📊 Active Layers", "🛠️ Map Tools"])
     
     with tab1:
@@ -479,7 +448,6 @@ with col2:
         
         st.markdown("---")
         
-        # Current settings
         st.markdown("#### Current Settings")
         st.markdown(f"""
         <div class="card">
@@ -504,7 +472,6 @@ with col2:
         
         st.markdown("---")
         
-        # Map Legends
         st.markdown("#### Map Legends")
         
         if wsi_active:
