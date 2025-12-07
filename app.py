@@ -40,14 +40,19 @@ st.markdown(
         padding-bottom: 0.8rem;
     }
     
-    /* Side panel - clean light theme */
     [data-testid="column"]:nth-child(2) {
-        background: linear-gradient(to bottom, #ffffff 0%, #f8fafc 100%) !important;
+        background: #020617 !important;  /* dark background */
         border-radius: 12px;
         padding: 15px !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        border: 1px solid #1f2937;
     }
+
+    [data-testid="column"]:nth-child(2),
+    [data-testid="column"]:nth-child(2) * {
+        color: #f9fafb !important;   /* light text */
+    }
+
     
     /* Tabs styling */
     .stTabs [data-baseweb="tab-list"] {
@@ -241,7 +246,7 @@ def add_wards_to_map(map_obj):
         # ---- STYLE: thin blue boundaries, transparent fill ----
         ward_style = {
             "color": "#0057ff",
-            "weight": 0.5,      # thinner lines (change to 0.8–1.5 if you like)
+            "weight": 0.6,      # thinner lines (change to 0.8–1.5 if you like)
             "opacity": 0.5,
             "fillOpacity": 0.0,
         }
@@ -540,4 +545,5 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
