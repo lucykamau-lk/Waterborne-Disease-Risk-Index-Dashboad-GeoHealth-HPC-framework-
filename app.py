@@ -133,6 +133,11 @@ def get_wdri_colormap():
 
 def add_raster_to_map(map_obj, tif_path, name, opacity=0.7, layer_type="WSI"):
     try:
+        # Check if file exists first
+        if not os.path.exists(tif_path):
+            st.error(f"❌ File not found: {tif_path}")
+            return False, None
+            
         with rasterio.open(tif_path) as src:
             arr = src.read(1).astype(float)
             bounds = [[src.bounds.bottom, src.bounds.left],
@@ -168,11 +173,14 @@ def add_raster_to_map(map_obj, tif_path, name, opacity=0.7, layer_type="WSI"):
                 cross_origin=False,
                 show=True
             ).add_to(map_obj)
-
+            
+            st.success(f"✅ Loaded {name}")
             return True, bounds
 
     except Exception as e:
-        st.error(f"Error loading {name}: {str(e)}")
+        st.error(f"❌ Error loading {name}: {str(e)}")
+        import traceback
+        st.code(traceback.format_exc())
         return False, None
 
 def add_wards_to_map(map_obj):
@@ -345,7 +353,13 @@ with col1:
 
     # Add layer control
     folium.LayerControl(position="topright").add_to(m)
-    
+
+    # DEBUG: Show what layers were successfully added
+    st.write("**Debug Info:**")
+    st.write(f"Number of layers in map: {len(m._children)}")
+    st.write(f"Layer bounds collected: {len(layer_bounds)}")
+    st.write(f"Show wards: {show_wards}")
+
     # Display the map - TALLER for better view
     st_folium(m, use_container_width=True, height=750, key="main_map")
 
@@ -497,4 +511,5 @@ st.markdown(
     unsafe_allow_html=True
 
 )
+
 
