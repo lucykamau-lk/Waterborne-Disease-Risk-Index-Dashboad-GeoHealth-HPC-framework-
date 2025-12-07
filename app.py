@@ -179,7 +179,7 @@ def add_wards_to_map(map_obj):
     """Add Nairobi ward boundaries"""
     wards_path = None
     for ext in ["shp", "geojson"]:
-        candidate = os.path.join(BASE_DIR, f"Nairobi_Wards.{ext}")
+        candidate =  os.path.join(BASE_DIR, "Classified_Maps", f"Nairobi_Wards.{ext}")
         if os.path.exists(candidate):
             wards_path = candidate
             break
@@ -497,3 +497,4 @@ st.markdown(
     unsafe_allow_html=True
 
 )
+
