@@ -292,18 +292,19 @@ with col1:
     layer_bounds = []
 
     # Layer file definitions
+    MAPS_FOLDER ="Classified_Maps"
     layer_files = {
         "WSI": {
-            2019: "WSI_2019_CLASS.tif",
-            2024: "WSI_2024_CLASS.tif",
+            2019: os.path.join(MAPS_FOLDER, "WSI_2019_CLASS.tif"),
+            2024: os.path.join(MAPS_FOLDER, "WSI_2024_CLASS.tif"),
         },
         "WDRI Wet": {
-            2019: "WDRI_Wet_2019_CLASS.tif",
-            2024: "WDRI_Wet_2024_CLASS.tif",
+            2019: os.path.join(MAPS_FOLDER, "WDRI_Wet_2019_CLASS.tif"),
+            2024: os.path.join(MAPS_FOLDER, "WDRI_Wet_2024_CLASS.tif"),
         },
         "WDRI Dry": {
-            2019: "WDRI_Dry_2019_CLASS.tif",
-            2024: "WDRI_Dry_2024_CLASS.tif",
+            2019: os.path.join(MAPS_FOLDER, "WDRI_Dry_2019_CLASS.tif"),
+            2024: os.path.join(MAPS_FOLDER, "WDRI_Dry_2024_CLASS.tif"),
         },
     }
 
@@ -494,4 +495,5 @@ st.markdown(
     </div>
     """,
     unsafe_allow_html=True
+
 )
