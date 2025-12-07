@@ -370,14 +370,19 @@ with col1:
                 [float(all_bounds[:, 0].max()), float(all_bounds[:, 1].max())],
             ])
 
-        # Add layer control
-        folium.LayerControl(position="topright").add_to(m)
+        # Don't add LayerControl - it may cause serialization issues
+        # folium.LayerControl(position="topright").add_to(m)
         
         # DEBUG: Show what layers were successfully added
         st.write("**Debug Info:**")
         st.write(f"Number of child elements in map: {len(m._children)}")
         st.write(f"Layer bounds collected: {len(layer_bounds)}")
         st.write(f"Show wards: {show_wards}")
+        
+        # Debug: Check each child element
+        st.write("**Map children:**")
+        for key, child in m._children.items():
+            st.write(f"- {key}: {type(child).__name__}")
         
         # Display the map - with error handling
         try:
