@@ -3,16 +3,15 @@ import streamlit as st
 import rasterio
 import numpy as np
 import folium
-from streamlit_folium import st_folium  # no longer used, but safe to leave
-import pandas as pd
-from folium.plugins import MiniMap, Fullscreen, MeasureControl
+from streamlit_folium import st_folium  # unused but harmless
+from folium.plugins import MeasureControl
 import matplotlib.colors as mcolors
 import geopandas as gpd
-from folium import Element
 import traceback
 
 st.set_page_config(page_title="WDRI Map Viewer", layout="wide", page_icon="🌊")
 
+# ----------------- GLOBAL STYLES -----------------
 st.markdown(
     """
     <style>
@@ -23,7 +22,7 @@ st.markdown(
         padding-right: 0.5rem !important;
         padding-bottom: 0rem !important;
     }
-    
+
     /* Map column - professional dark theme */
     [data-testid="column"]:first-child {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
@@ -31,7 +30,7 @@ st.markdown(
         padding: 15px !important;
         box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
     }
-    
+
     [data-testid="column"]:first-child h1 {
         color: #f1f5f9 !important;
         font-size: 1.7rem;
@@ -39,13 +38,21 @@ st.markdown(
         border-bottom: 3px solid #3b82f6;
         padding-bottom: 0.8rem;
     }
-    
-    /* Make text in the side panel dark so it is visible */
+
+    /* Side panel - simple, very visible */
+    [data-testid="column"]:nth-child(2) {
+        background: #ffffff !important;
+        border-radius: 12px;
+        padding: 15px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+    }
+
     [data-testid="column"]:nth-child(2),
     [data-testid="column"]:nth-child(2) * {
-        color: #000000!important;   /* dark navy text */
+        color: #0f172a !important;  /* dark text for readability */
     }
-    
+
     /* Tabs styling */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
@@ -53,18 +60,18 @@ st.markdown(
         padding: 8px;
         border-radius: 10px;
     }
-    
+
     .stTabs [data-baseweb="tab"] {
         border-radius: 8px;
         padding: 10px 20px;
         font-weight: 600;
     }
-    
+
     .stTabs [aria-selected="true"] {
         background-color: #3b82f6 !important;
         color: white !important;
     }
-    
+
     /* Better button styling */
     .stButton > button {
         width: 100%;
@@ -77,12 +84,12 @@ st.markdown(
         padding: 12px !important;
         transition: all 0.3s ease !important;
     }
-    
+
     .stButton > button:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 15px rgba(37, 99, 235, 0.4) !important;
     }
-    
+
     /* Card-like elements */
     .card {
         background: white;
@@ -92,7 +99,7 @@ st.markdown(
         border-left: 4px solid #3b82f6;
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
-    
+
     /* Legend items */
     .legend-item {
         display: flex;
@@ -102,7 +109,7 @@ st.markdown(
         border-radius: 6px;
         background-color: #f8fafc;
     }
-    
+
     /* Active layer indicator */
     .active-badge {
         display: inline-block;
@@ -121,6 +128,7 @@ st.markdown(
 
 BASE_DIR = "."
 
+# ----------------- HELPERS -----------------
 def get_wsi_colormap():
     colors = ["#00FF00", "#FFFF00", "#FFA500", "#FF0000"]
     return mcolors.ListedColormap(colors)
@@ -131,11 +139,10 @@ def get_wdri_colormap():
 
 def add_raster_to_map(map_obj, tif_path, name, opacity=0.7, layer_type="WSI"):
     try:
-        # Check if file exists first
         if not os.path.exists(tif_path):
             st.error(f"❌ File not found: {tif_path}")
             return False, None
-            
+
         with rasterio.open(tif_path) as src:
             arr = src.read(1).astype(float)
             bounds = [[src.bounds.bottom, src.bounds.left],
@@ -169,9 +176,9 @@ def add_raster_to_map(map_obj, tif_path, name, opacity=0.7, layer_type="WSI"):
                 opacity=float(opacity),
                 interactive=False,
                 cross_origin=False,
-                show=True
+                show=True,
             ).add_to(map_obj)
-            
+
             st.success(f"✅ Loaded {name}")
             return True, bounds
 
@@ -188,18 +195,14 @@ def add_wards_to_map(map_obj):
             os.path.join(BASE_DIR, "Classified_Maps", "Nairobi.geojson"),
             os.path.join(BASE_DIR, "Classified_Maps", "Nairobi_Wards.geojson"),
         ]
-        
+
         st.write("**Looking for ward boundaries in:**")
         for path in possible_paths:
             exists = os.path.exists(path)
             st.write(f"{'✅' if exists else '❌'} {path}")
-        
-        wards_path = None
-        for path in possible_paths:
-            if os.path.exists(path):
-                wards_path = path
-                break
-        
+
+        wards_path = next((p for p in possible_paths if os.path.exists(p)), None)
+
         if wards_path is None:
             st.warning("⚠️ Nairobi_Wards shapefile/geojson not found")
             maps_folder = os.path.join(BASE_DIR, "Classified_Maps")
@@ -211,35 +214,32 @@ def add_wards_to_map(map_obj):
         st.info(f"📂 Loading wards from: {wards_path}")
         gdf = gpd.read_file(wards_path)
         st.success(f"✅ Loaded {len(gdf)} ward boundaries")
-        
-        # Simplify geometries to reduce complexity
+
+        # Simplify geometries
         gdf["geometry"] = gdf["geometry"].simplify(0.001)
 
-        # ---- PREFER NAME_3 FOR LABELS ----
-        label_field = None
+        # Prefer NAME_3
         if "NAME_3" in gdf.columns:
             label_field = "NAME_3"
         else:
+            label_field = None
             possible_names = ["name_3", "ward", "ward_name", "name"]
             for col in gdf.columns:
                 if col.lower() in possible_names:
                     label_field = col
                     break
-
-        if label_field is None:
-            # last resort: any non-geometry column
-            for col in gdf.columns:
-                if col.lower() != "geometry":
-                    label_field = col
-                    break
+            if label_field is None:
+                for col in gdf.columns:
+                    if col.lower() != "geometry":
+                        label_field = col
+                        break
 
         st.write(f"Using label field: {label_field}")
 
-        # ---- STYLE: thin blue boundaries, transparent fill ----
         ward_style = {
             "color": "#0057ff",
-            "weight": 0.6,      # thinner lines (change to 0.8–1.5 if you like)
-            "opacity": 0.5,
+            "weight": 0.8,
+            "opacity": 0.8,
             "fillOpacity": 0.0,
         }
 
@@ -261,7 +261,7 @@ def add_wards_to_map(map_obj):
         st.error(f"❌ Error loading Nairobi_Wards layer: {e}")
         st.code(traceback.format_exc())
 
-# Session state for layer visibility
+# ----------------- SESSION STATE -----------------
 if "layer_visibility" not in st.session_state:
     st.session_state.layer_visibility = {
         "WSI": True,
@@ -269,7 +269,7 @@ if "layer_visibility" not in st.session_state:
         "WDRI Dry": True,
     }
 
-# SIDEBAR
+# ----------------- SIDEBAR -----------------
 with st.sidebar:
     st.header("🌍 Map Controls")
 
@@ -298,14 +298,15 @@ with st.sidebar:
     zoom_level = st.slider("Zoom Level", 5, 18, 11)
     show_measure = st.checkbox("Enable Measurement Tool", False)
 
-# MAIN LAYOUT - 2 COLUMNS
+# ----------------- MAIN LAYOUT -----------------
 col1, col2 = st.columns([8, 3], gap="small")
 
 with col1:
-    st.title(f"🌊 Nairobi Waterborne Disease Risk (WDRI) & Water Scarcity (WSI) Hotspots Map Viewer – {year}")
-    
+    st.title(
+        f"🌊 Nairobi Waterborne Disease Risk (WDRI) & Water Scarcity (WSI) Hotspots Map Viewer – {year}"
+    )
+
     try:
-        # Create the map
         m = folium.Map(
             location=[-1.2864, 36.8172],
             zoom_start=zoom_level,
@@ -316,7 +317,6 @@ with col1:
         if show_measure:
             try:
                 MeasureControl().add_to(m)
-                st.info("Measure tool added")
             except Exception as e:
                 st.warning(f"Could not add measure tool: {e}")
 
@@ -341,14 +341,13 @@ with col1:
         wsi_active = False
         wdri_active = False
 
-        # Add raster layers to map
         for layer, visible in st.session_state.layer_visibility.items():
             if visible and layer in layer_files:
                 filename = layer_files[layer][year]
                 tif_path = os.path.join(BASE_DIR, filename)
-                
+
                 layer_type = "WSI" if layer == "WSI" else "WDRI"
-                
+
                 if layer == "WSI":
                     wsi_active = True
                 else:
@@ -361,19 +360,19 @@ with col1:
                 if success and bounds:
                     layer_bounds.append(bounds)
 
-        # Add ward boundaries if enabled
         if show_wards:
             add_wards_to_map(m)
 
-        # Fit map bounds to visible layers
         if layer_bounds:
             all_bounds = np.vstack(layer_bounds)
-            m.fit_bounds([
-                [float(all_bounds[:, 0].min()), float(all_bounds[:, 1].min())],
-                [float(all_bounds[:, 0].max()), float(all_bounds[:, 1].max())],
-            ])
+            m.fit_bounds(
+                [
+                    [float(all_bounds[:, 0].min()), float(all_bounds[:, 1].min())],
+                    [float(all_bounds[:, 0].max()), float(all_bounds[:, 1].max())],
+                ]
+            )
 
-        # Debug info
+        # Debug (optional – you can remove these)
         st.write("**Debug Info:**")
         st.write(f"Number of child elements in map: {len(m._children)}")
         st.write(f"Layer bounds collected: {len(layer_bounds)}")
@@ -382,7 +381,7 @@ with col1:
         for key, child in m._children.items():
             st.write(f"- {key}: {type(child).__name__}")
 
-        # ---- Render map as HTML (no st_folium, so no JSON error) ----
+        # Render Folium map
         map_html = m._repr_html_()
         st.components.v1.html(map_html, height=750, scrolling=True)
 
@@ -392,116 +391,164 @@ with col1:
 
 with col2:
     tab1, tab2 = st.tabs(["📊 Active Layers", "🛠️ Map Tools"])
-    
-with tab1:
-    st.markdown("### Active Layers")
-    ...
-    if show_wards:
-        st.markdown("---")
-        st.markdown("**🗺️ Ward Boundaries**")
-        ...
-        
+
+    # ---------- TAB 1: ACTIVE LAYERS ----------
+    with tab1:
+        st.markdown("### Active Layers")
+
+        active_layers = [
+            layer
+            for layer, visible in st.session_state.layer_visibility.items()
+            if visible
+        ]
+
         if active_layers:
             for layer in active_layers:
                 st.markdown(f"**{layer} {year}**")
-                st.markdown(f"""
-                <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Status: <span class="active-badge">ACTIVE</span></span>
-                        <span style="font-size: 0.9rem; color: #64748b;">📍</span>
+                st.markdown(
+                    """
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Status: <span class="active-badge">ACTIVE</span></span>
+                            <span style="font-size: 0.9rem; color: #64748b;">📍</span>
+                        </div>
                     </div>
-                </div>
-                """, unsafe_allow_html=True)
+                    """,
+                    unsafe_allow_html=True,
+                )
         else:
             st.info("No layers active")
-        
+
         if show_wards:
             st.markdown("---")
             st.markdown("**🗺️ Ward Boundaries**")
-            st.markdown(f"""
+            st.markdown(
+                """
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Status: <span style="background-color: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">ENABLED</span></span>
+                        <span style="font-size: 0.9rem; color: #64748b;">🗺️</span>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    # ---------- TAB 2: MAP TOOLS ----------
+    with tab2:
+        st.markdown("### Map Tools")
+
+        # Download button
+        try:
+            map_html = m._repr_html_()
+            st.download_button(
+                label="📥 Download Map as HTML",
+                data=map_html,
+                file_name=f"WDRI_Map_Nairobi_{year}.html",
+                mime="text/html",
+                use_container_width=True,
+            )
+        except Exception:
+            st.warning("Map download not available")
+
+        st.markdown("---")
+        st.markdown("#### Current Settings")
+        st.markdown(
+            f"""
             <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span>Status: <span style="background-color: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">ENABLED</span></span>
-                    <span style="font-size: 0.9rem; color: #64748b;">🗺️</span>
+                <div class="legend-item">
+                    <div style="width: 8px; height: 8px; background-color: #3b82f6; border-radius: 50%; margin-right: 10px;"></div>
+                    <span><strong>Year:</strong> {year}</span>
+                </div>
+                <div class="legend-item">
+                    <div style="width: 8px; height: 8px; background-color: #8b5cf6; border-radius: 50%; margin-right: 10px;"></div>
+                    <span><strong>Basemap:</strong> {basemap}</span>
+                </div>
+                <div class="legend-item">
+                    <div style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; margin-right: 10px;"></div>
+                    <span><strong>Opacity:</strong> {opacity}</span>
+                </div>
+                <div class="legend-item">
+                    <div style="width: 8px; height: 8px; background-color: #f59e0b; border-radius: 50%; margin-right: 10px;"></div>
+                    <span><strong>Zoom Level:</strong> {zoom_level}</span>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
-    
-with tab2:
-    st.markdown(
-        '<h3 style="color:#f9fafb; margin-bottom:0.5rem;">Map Tools</h3>',
-        unsafe_allow_html=True,
-    )
-    ...
-    st.markdown(
-        '<h4 style="color:#f9fafb; margin-top:0.5rem;">Current Settings</h4>',
-        unsafe_allow_html=True,
-    )
-    ...
-    st.markdown("---")
-    st.markdown(
-        '<h4 style="color:#f9fafb; margin-top:0.5rem;">Map Legends</h4>',
-        unsafe_allow_html=True,
-    )
+            """,
+            unsafe_allow_html=True,
+        )
 
-        
+        st.markdown("---")
+        st.markdown("#### Map Legends")
+
         if wsi_active:
             st.markdown("**WSI (Water Scarcity)**")
             col_a, col_b = st.columns(2)
             with col_a:
-                st.markdown("""
-                <div style="display: flex; align-items: center; margin-bottom: 5px;">
-                    <div style="width: 20px; height: 20px; background-color: #00FF00; margin-right: 8px; border-radius: 3px;"></div>
-                    <span>Low (1)</span>
-                </div>
-                <div style="display: flex; align-items: center; margin-bottom: 5px;">
-                    <div style="width: 20px; height: 20px; background-color: #FFFF00; margin-right: 8px; border-radius: 3px;"></div>
-                    <span>Moderate (2)</span>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(
+                    """
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="width: 20px; height: 20px; background-color: #00FF00; margin-right: 8px; border-radius: 3px;"></div>
+                        <span>Low (1)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="width: 20px; height: 20px; background-color: #FFFF00; margin-right: 8px; border-radius: 3px;"></div>
+                        <span>Moderate (2)</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
             with col_b:
-                st.markdown("""
-                <div style="display: flex; align-items: center; margin-bottom: 5px;">
-                    <div style="width: 20px; height: 20px; background-color: #FFA500; margin-right: 8px; border-radius: 3px;"></div>
-                    <span>Severe (3)</span>
-                </div>
-                <div style="display: flex; align-items: center; margin-bottom: 5px;">
-                    <div style="width: 20px; height: 20px; background-color: #FF0000; margin-right: 8px; border-radius: 3px;"></div>
-                    <span>Extreme (4)</span>
-                </div>
-                """, unsafe_allow_html=True)
-        
+                st.markdown(
+                    """
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="width: 20px; height: 20px; background-color: #FFA500; margin-right: 8px; border-radius: 3px;"></div>
+                        <span>Severe (3)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="width: 20px; height: 20px; background-color: #FF0000; margin-right: 8px; border-radius: 3px;"></div>
+                        <span>Extreme (4)</span>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
         if wdri_active:
             st.markdown("**WDRI (Disease Risk)**")
-            st.markdown("""
-            <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                <div style="width: 20px; height: 20px; background-color: #00FF00; margin-right: 10px; border-radius: 3px;"></div>
-                <span>Low (1)</span>
-            </div>
-            <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                <div style="width: 20px; height: 20px; background-color: #FFA500; margin-right: 10px; border-radius: 3px;"></div>
-                <span>Moderate (2)</span>
-            </div>
-            <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                <div style="width: 20px; height: 20px; background-color: #FF0000; margin-right: 10px; border-radius: 3px;"></div>
-                <span>High (3)</span>
-            </div>
-            """, unsafe_allow_html=True)
-        
+            st.markdown(
+                """
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="width: 20px; height: 20px; background-color: #00FF00; margin-right: 10px; border-radius: 3px;"></div>
+                    <span>Low (1)</span>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="width: 20px; height: 20px; background-color: #FFA500; margin-right: 10px; border-radius: 3px;"></div>
+                    <span>Moderate (2)</span>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="width: 20px; height: 20px; background-color: #FF0000; margin-right: 10px; border-radius: 3px;"></div>
+                    <span>High (3)</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
         if show_measure:
             st.markdown("---")
             st.markdown("**📏 Measurement Tool**")
-            st.markdown(f"""
-            <div class="card">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span>Status: <span style="background-color: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">ACTIVE</span></span>
-                    <span style="font-size: 0.9rem; color: #64748b;">📏</span>
+            st.markdown(
+                """
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Status: <span style="background-color: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">ACTIVE</span></span>
+                        <span style="font-size: 0.9rem; color: #64748b;">📏</span>
+                    </div>
+                    <p style="font-size: 0.85rem; color: #64748b; margin-top: 8px; margin-bottom: 0;">Click and drag to measure distances on the map</p>
                 </div>
-                <p style="font-size: 0.85rem; color: #64748b; margin-top: 8px; margin-bottom: 0;">Click and drag to measure distances on the map</p>
-            </div>
-            """, unsafe_allow_html=True)
+                """,
+                unsafe_allow_html=True,
+            )
 
-# Footer
+# ----------------- FOOTER -----------------
 st.markdown("---")
 st.markdown(
     """
@@ -509,12 +556,5 @@ st.markdown(
         <p>WDRI/WSI Map Viewer • Lucy Kamau-PhD • 2025</p>
     </div>
     """,
-    unsafe_allow_html=True
+    unsafe_allow_html=True,
 )
-
-
-
-
-
-
-
