@@ -363,7 +363,7 @@ with col1:
 
         # Render Folium map
         map_html = m._repr_html_()
-        st.components.v1.html(map_html, height=750, scrolling=True)
+        st.components.v1.html(map_html, height=400, scrolling=True)
 
     except Exception as e:
         st.error(f"Critical error creating map: {str(e)}")
@@ -536,3 +536,4 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
