@@ -376,7 +376,7 @@ with col1:
         st.code(traceback.format_exc())
 
 with col2:
-    tab1, tab2 = st.tabs(["📊 Active Layers", "🛠️ Map Tools"])
+    tab1, tab2 = st.tabs(["🛠️ Map Tools", "📊 Active Layers"])
 
     # ---------- TAB 1: ACTIVE LAYERS ----------
     with tab1:
@@ -543,6 +543,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
 
 
 
