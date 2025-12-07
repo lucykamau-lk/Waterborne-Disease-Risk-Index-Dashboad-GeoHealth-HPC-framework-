@@ -43,7 +43,7 @@ st.markdown(
     /* Make text in the side panel dark so it is visible */
     [data-testid="column"]:nth-child(2),
     [data-testid="column"]:nth-child(2) * {
-        color: #FFFFFF!important;   /* dark navy text */
+        color: #000000!important;   /* dark navy text */
     }
     
     /* Tabs styling */
@@ -537,6 +537,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
