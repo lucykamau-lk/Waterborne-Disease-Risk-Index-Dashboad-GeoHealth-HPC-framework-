@@ -213,7 +213,7 @@ def add_wards_to_map(map_obj):
 
         st.info(f"📂 Loading wards from: {wards_path}")
         gdf = gpd.read_file(wards_path)
-        st.success(f"✅ Loaded {len(gdf)} ward boundaries")
+        #st.success(f"✅ Loaded {len(gdf)} ward boundaries")
 
         # Simplify geometries
         gdf["geometry"] = gdf["geometry"].simplify(0.001)
@@ -234,7 +234,7 @@ def add_wards_to_map(map_obj):
                         label_field = col
                         break
 
-        st.write(f"Using label field: {label_field}")
+       #st.write(f"Using label field: {label_field}")
 
         ward_style = {
             "color": "#0057ff",
@@ -547,4 +547,5 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
 
