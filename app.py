@@ -1,4 +1,4 @@
-import os
+fimport os
 import streamlit as st
 import rasterio
 import numpy as np
@@ -43,7 +43,7 @@ st.markdown(
     /* Make text in the side panel dark so it is visible */
     [data-testid="column"]:nth-child(2),
     [data-testid="column"]:nth-child(2) * {
-        color: #0f172a !important;   /* dark navy text */
+        color: #FFFFFF!important;   /* dark navy text */
     }
     
     /* Tabs styling */
@@ -537,6 +537,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
