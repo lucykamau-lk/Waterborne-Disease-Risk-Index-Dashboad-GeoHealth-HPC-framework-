@@ -179,7 +179,6 @@ def add_raster_to_map(map_obj, tif_path, name, opacity=0.7, layer_type="WSI"):
                 show=True,
             ).add_to(map_obj)
 
-            # st.success(f"✅ Loaded {name}")
             return True, bounds
 
     except Exception as e:
@@ -203,12 +202,9 @@ def add_wards_to_map(map_obj):
             maps_folder = os.path.join(BASE_DIR, "Classified_Maps")
             if os.path.exists(maps_folder):
                 files = os.listdir(maps_folder)
-                # st.write(f"Files in Classified_Maps: {files}")
             return
 
-       # st.info(f"📂 Loading wards from: {wards_path}")
         gdf = gpd.read_file(wards_path)
-        #st.success(f"✅ Loaded {len(gdf)} ward boundaries")
 
         # Simplify geometries
         gdf["geometry"] = gdf["geometry"].simplify(0.001)
@@ -228,8 +224,6 @@ def add_wards_to_map(map_obj):
                     if col.lower() != "geometry":
                         label_field = col
                         break
-
-       #st.write(f"Using label field: {label_field}")
 
         ward_style = {
             "color": "#0057ff",
@@ -376,9 +370,9 @@ with col1:
         st.code(traceback.format_exc())
 
 with col2:
-    tab1, tab2 = st.tabs(["🛠️ Map Tools", "📊 Active Layers"])
+    tab1, tab2 = st.tabs(["📊 Active Layers", "🛠️ Map Tools"])
 
-    # ---------- TAB 1: ACTIVE LAYERS ----------
+    # ---------- TAB 1: MAP TOOLS (Download + Legends + Current Settings) ----------
     with tab1:
         st.markdown("### Map Tools")
 
@@ -395,36 +389,10 @@ with col2:
         except Exception:
             st.warning("Map download not available")
 
-        st.markdown("---")
-        st.markdown("#### Current Settings")
-        st.markdown(
-            f"""
-            <div class="card">
-                <div class="legend-item">
-                    <div style="width: 8px; height: 8px; background-color: #3b82f6; border-radius: 50%; margin-right: 10px;"></div>
-                    <span><strong>Year:</strong> {year}</span>
-                </div>
-                <div class="legend-item">
-                    <div style="width: 8px; height: 8px; background-color: #8b5cf6; border-radius: 50%; margin-right: 10px;"></div>
-                    <span><strong>Basemap:</strong> {basemap}</span>
-                </div>
-                <div class="legend-item">
-                    <div style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; margin-right: 10px;"></div>
-                    <span><strong>Opacity:</strong> {opacity}</span>
-                </div>
-                <div class="legend-item">
-                    <div style="width: 8px; height: 8px; background-color: #f59e0b; border-radius: 50%; margin-right: 10px;"></div>
-                    <span><strong>Zoom Level:</strong> {zoom_level}</span>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
+        # --- MAP LEGENDS FIRST ---
         st.markdown("---")
         st.markdown("#### Map Legends")
 
-        # ---------- WSI LEGEND (ONE COLUMN) ----------
         if wsi_active:
             st.markdown("**WSI (Water Scarcity)**")
             st.markdown(
@@ -451,7 +419,6 @@ with col2:
                 unsafe_allow_html=True,
             )
 
-        # ---------- WDRI LEGEND (ONE COLUMN) ----------
         if wdri_active:
             st.markdown("**WDRI (Disease Risk)**")
             st.markdown(
@@ -474,6 +441,33 @@ with col2:
                 unsafe_allow_html=True,
             )
 
+        # --- THEN CURRENT SETTINGS ---
+        st.markdown("---")
+        st.markdown("#### Current Settings")
+        st.markdown(
+            f"""
+            <div class="card">
+                <div class="legend-item">
+                    <div style="width: 8px; height: 8px; background-color: #3b82f6; border-radius: 50%; margin-right: 10px;"></div>
+                    <span><strong>Year:</strong> {year}</span>
+                </div>
+                <div class="legend-item">
+                    <div style="width: 8px; height: 8px; background-color: #8b5cf6; border-radius: 50%; margin-right: 10px;"></div>
+                    <span><strong>Basemap:</strong> {basemap}</span>
+                </div>
+                <div class="legend-item">
+                    <div style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; margin-right: 10px;"></div>
+                    <span><strong>Opacity:</strong> {opacity}</span>
+                </div>
+                <div class="legend-item">
+                    <div style="width: 8px; height: 8px; background-color: #f59e0b; border-radius: 50%; margin-right: 10px;"></div>
+                    <span><strong>Zoom Level:</strong> {zoom_level}</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
         if show_measure:
             st.markdown("---")
             st.markdown("**📏 Measurement Tool**")
@@ -490,7 +484,7 @@ with col2:
                 unsafe_allow_html=True,
             )
 
-    # ---------- TAB 2: MAP TOOLS ----------
+    # ---------- TAB 2: ACTIVE LAYERS ----------
     with tab2:
         st.markdown("### Active Layers")
 
@@ -531,7 +525,6 @@ with col2:
                 """,
                 unsafe_allow_html=True,
             )
-            
 
 # ----------------- FOOTER -----------------
 st.markdown("---")
@@ -543,8 +536,3 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
-
-
-
-
