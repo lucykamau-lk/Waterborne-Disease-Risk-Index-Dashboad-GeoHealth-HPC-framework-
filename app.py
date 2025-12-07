@@ -40,19 +40,11 @@ st.markdown(
         padding-bottom: 0.8rem;
     }
     
-    [data-testid="column"]:nth-child(2) {
-        background: #020617 !important;  /* dark background */
-        border-radius: 12px;
-        padding: 15px !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-        border: 1px solid #1f2937;
-    }
-
+    /* Make text in the side panel dark so it is visible */
     [data-testid="column"]:nth-child(2),
     [data-testid="column"]:nth-child(2) * {
-        color: #f9fafb !important;   /* light text */
+        color: #0f172a !important;   /* dark navy text */
     }
-
     
     /* Tabs styling */
     .stTabs [data-baseweb="tab-list"] {
@@ -545,5 +537,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
