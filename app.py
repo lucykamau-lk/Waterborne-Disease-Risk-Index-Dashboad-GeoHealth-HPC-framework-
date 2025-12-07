@@ -380,48 +380,6 @@ with col2:
 
     # ---------- TAB 1: ACTIVE LAYERS ----------
     with tab1:
-        st.markdown("### Active Layers")
-
-        active_layers = [
-            layer
-            for layer, visible in st.session_state.layer_visibility.items()
-            if visible
-        ]
-
-        if active_layers:
-            for layer in active_layers:
-                st.markdown(f"**{layer} {year}**")
-                st.markdown(
-                    """
-                    <div class="card">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span>Status: <span class="active-badge">ACTIVE</span></span>
-                            <span style="font-size: 0.9rem;">📍</span>
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-        else:
-            st.info("No layers active")
-
-        if show_wards:
-            st.markdown("---")
-            st.markdown("**🗺️ Ward Boundaries**")
-            st.markdown(
-                """
-                <div class="card">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Status: <span style="background-color: #22c55e; color: #022c22; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">ENABLED</span></span>
-                        <span style="font-size: 0.9rem;">🗺️</span>
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-    # ---------- TAB 2: MAP TOOLS ----------
-    with tab2:
         st.markdown("### Map Tools")
 
         # Download button
@@ -532,6 +490,49 @@ with col2:
                 unsafe_allow_html=True,
             )
 
+    # ---------- TAB 2: MAP TOOLS ----------
+    with tab2:
+        st.markdown("### Active Layers")
+
+        active_layers = [
+            layer
+            for layer, visible in st.session_state.layer_visibility.items()
+            if visible
+        ]
+
+        if active_layers:
+            for layer in active_layers:
+                st.markdown(f"**{layer} {year}**")
+                st.markdown(
+                    """
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span>Status: <span class="active-badge">ACTIVE</span></span>
+                            <span style="font-size: 0.9rem;">📍</span>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.info("No layers active")
+
+        if show_wards:
+            st.markdown("---")
+            st.markdown("**🗺️ Ward Boundaries**")
+            st.markdown(
+                """
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Status: <span style="background-color: #22c55e; color: #022c22; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">ENABLED</span></span>
+                        <span style="font-size: 0.9rem;">🗺️</span>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            
+
 # ----------------- FOOTER -----------------
 st.markdown("---")
 st.markdown(
@@ -542,6 +543,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
 
 
 
