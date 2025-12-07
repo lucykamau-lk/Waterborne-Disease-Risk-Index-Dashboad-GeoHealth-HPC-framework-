@@ -164,13 +164,16 @@ def add_raster_to_map(map_obj, tif_path, name, opacity=0.7, layer_type="WSI"):
             rgba_img = (cmap(arr_normalized) * 255).astype(np.uint8)
             alpha_mask = (~np.isnan(arr)).astype(np.uint8) * 255
             rgba_img[..., 3] = alpha_mask
+            
+            # Convert to Python list to ensure JSON serialization
+            rgba_list = rgba_img.tolist()
 
             folium.raster_layers.ImageOverlay(
-                image=rgba_img,
+                image=rgba_list,  # Use list instead of numpy array
                 bounds=bounds,
                 name=name,
-                opacity=opacity,
-                interactive=True,
+                opacity=float(opacity),  # Ensure float
+                interactive=False,  # Changed to False for better compatibility
                 cross_origin=False,
                 show=True
             ).add_to(map_obj)
@@ -217,6 +220,9 @@ def add_wards_to_map(map_obj):
         gdf = gpd.read_file(wards_path)
         st.success(f"✅ Loaded {len(gdf)} ward boundaries")
         
+        # Simplify geometries to reduce complexity
+        gdf['geometry'] = gdf['geometry'].simplify(0.001)
+        
         # Find label field
         possible_names = ["name_3", "name", "ward", "ward_name"]
         label_field = None
@@ -234,8 +240,11 @@ def add_wards_to_map(map_obj):
         
         st.write(f"Using label field: {label_field}")
 
+        # Convert to GeoJSON string explicitly
+        geojson_str = gdf.to_json()
+
         folium.GeoJson(
-            gdf.to_json(),
+            geojson_str,
             name="Nairobi Wards",
             style_function=lambda feature: {
                 "color": "#000000",
@@ -288,12 +297,12 @@ with st.sidebar:
             key=f"checkbox_{layer}",
         )
 
-    show_wards = st.checkbox("Show ward boundaries", value=False)  # Changed to False for debugging
+    show_wards = st.checkbox("Show ward boundaries", value=False)
     opacity = st.slider("Layer Opacity", 0.1, 1.0, 0.7, 0.1)
 
     st.subheader("⚙️ Map Settings")
     zoom_level = st.slider("Zoom Level", 5, 18, 11)
-    show_measure = st.checkbox("Enable Measurement Tool", True)
+    show_measure = st.checkbox("Enable Measurement Tool", False)  # Changed to False
 
 # MAIN LAYOUT - 2 COLUMNS FOR LARGER MAP
 col1, col2 = st.columns([8, 3], gap="small")
@@ -301,88 +310,100 @@ col1, col2 = st.columns([8, 3], gap="small")
 with col1:
     st.title(f"🌊 Nairobi Waterborne Disease Risk (WDRI) & Water Scarcity (WSI) Hotspots Map Viewer – {year}")
     
-    # Create the map
-    m = folium.Map(
-        location=[-1.2864, 36.8172],
-        zoom_start=zoom_level,
-        tiles=basemap_options[basemap],
-        control_scale=True,
-    )
+    try:
+        # Create the map
+        m = folium.Map(
+            location=[-1.2864, 36.8172],
+            zoom_start=zoom_level,
+            tiles=basemap_options[basemap],
+            control_scale=True,
+        )
 
-    # Add map plugins
-    minimap = MiniMap()
-    m.add_child(minimap)
+        # Only add minimal plugins
+        if show_measure:
+            try:
+                MeasureControl().add_to(m)
+                st.info("Measure tool added")
+            except Exception as e:
+                st.warning(f"Could not add measure tool: {e}")
 
-    if show_measure:
-        MeasureControl().add_to(m)
+        layer_bounds = []
 
-    Fullscreen().add_to(m)
+        # Layer file definitions
+        MAPS_FOLDER = "Classified_Maps"
+        layer_files = {
+            "WSI": {
+                2019: os.path.join(MAPS_FOLDER, "WSI_2019_CLASS.tif"),
+                2024: os.path.join(MAPS_FOLDER, "WSI_2024_CLASS.tif"),
+            },
+            "WDRI Wet": {
+                2019: os.path.join(MAPS_FOLDER, "WDRI_Wet_2019_CLASS.tif"),
+                2024: os.path.join(MAPS_FOLDER, "WDRI_Wet_2024_CLASS.tif"),
+            },
+            "WDRI Dry": {
+                2019: os.path.join(MAPS_FOLDER, "WDRI_Dry_2019_CLASS.tif"),
+                2024: os.path.join(MAPS_FOLDER, "WDRI_Dry_2024_CLASS.tif"),
+            },
+        }
 
-    layer_bounds = []
+        wsi_active = False
+        wdri_active = False
 
-    # Layer file definitions
-    MAPS_FOLDER = "Classified_Maps"
-    layer_files = {
-        "WSI": {
-            2019: os.path.join(MAPS_FOLDER, "WSI_2019_CLASS.tif"),
-            2024: os.path.join(MAPS_FOLDER, "WSI_2024_CLASS.tif"),
-        },
-        "WDRI Wet": {
-            2019: os.path.join(MAPS_FOLDER, "WDRI_Wet_2019_CLASS.tif"),
-            2024: os.path.join(MAPS_FOLDER, "WDRI_Wet_2024_CLASS.tif"),
-        },
-        "WDRI Dry": {
-            2019: os.path.join(MAPS_FOLDER, "WDRI_Dry_2019_CLASS.tif"),
-            2024: os.path.join(MAPS_FOLDER, "WDRI_Dry_2024_CLASS.tif"),
-        },
-    }
+        # Add raster layers to map
+        for layer, visible in st.session_state.layer_visibility.items():
+            if visible and layer in layer_files:
+                filename = layer_files[layer][year]
+                tif_path = os.path.join(BASE_DIR, filename)
+                
+                layer_type = "WSI" if layer == "WSI" else "WDRI"
+                
+                if layer == "WSI":
+                    wsi_active = True
+                else:
+                    wdri_active = True
 
-    wsi_active = False
-    wdri_active = False
+                success, bounds = add_raster_to_map(
+                    m, tif_path, f"{layer} {year}", opacity=opacity, layer_type=layer_type
+                )
 
-    # Add raster layers to map
-    for layer, visible in st.session_state.layer_visibility.items():
-        if visible and layer in layer_files:
-            filename = layer_files[layer][year]
-            tif_path = os.path.join(BASE_DIR, filename)
+                if success and bounds:
+                    layer_bounds.append(bounds)
+
+        # Add ward boundaries if enabled
+        if show_wards:
+            add_wards_to_map(m)
+
+        # Fit map bounds to visible layers
+        if layer_bounds:
+            all_bounds = np.vstack(layer_bounds)
+            m.fit_bounds([
+                [float(all_bounds[:, 0].min()), float(all_bounds[:, 1].min())],
+                [float(all_bounds[:, 0].max()), float(all_bounds[:, 1].max())],
+            ])
+
+        # Add layer control
+        folium.LayerControl(position="topright").add_to(m)
+        
+        # DEBUG: Show what layers were successfully added
+        st.write("**Debug Info:**")
+        st.write(f"Number of child elements in map: {len(m._children)}")
+        st.write(f"Layer bounds collected: {len(layer_bounds)}")
+        st.write(f"Show wards: {show_wards}")
+        
+        # Display the map - with error handling
+        try:
+            st_folium(m, use_container_width=True, height=750, key="main_map")
+        except Exception as e:
+            st.error(f"Error rendering map: {str(e)}")
+            st.code(traceback.format_exc())
+            st.info("Trying to display map as HTML instead...")
+            # Fallback: display as iframe
+            map_html = m._repr_html_()
+            st.components.v1.html(map_html, height=750, scrolling=True)
             
-            layer_type = "WSI" if layer == "WSI" else "WDRI"
-            
-            if layer == "WSI":
-                wsi_active = True
-            else:
-                wdri_active = True
-
-            success, bounds = add_raster_to_map(
-                m, tif_path, f"{layer} {year}", opacity=opacity, layer_type=layer_type
-            )
-
-            if success and bounds:
-                layer_bounds.append(bounds)
-
-    # Add ward boundaries if enabled
-    if show_wards:
-        add_wards_to_map(m)
-
-    # Fit map bounds to visible layers
-    if layer_bounds:
-        all_bounds = np.vstack(layer_bounds)
-        m.fit_bounds([
-            [all_bounds[:, 0].min(), all_bounds[:, 1].min()],
-            [all_bounds[:, 0].max(), all_bounds[:, 1].max()],
-        ])
-
-    # Add layer control
-    folium.LayerControl(position="topright").add_to(m)
-    
-    # DEBUG: Show what layers were successfully added
-    st.write("**Debug Info:**")
-    st.write(f"Number of layers in map: {len(m._children)}")
-    st.write(f"Layer bounds collected: {len(layer_bounds)}")
-    st.write(f"Show wards: {show_wards}")
-    
-    # Display the map - TALLER for better view
-    st_folium(m, use_container_width=True, height=750, key="main_map")
+    except Exception as e:
+        st.error(f"Critical error creating map: {str(e)}")
+        st.code(traceback.format_exc())
 
 with col2:
     # Create tabs for better organization
@@ -426,14 +447,17 @@ with col2:
         st.markdown("### Map Tools")
         
         # Download button
-        map_html = m._repr_html_()
-        st.download_button(
-            label="📥 Download Map as HTML",
-            data=map_html,
-            file_name=f"WDRI_Map_Nairobi_{year}.html",
-            mime="text/html",
-            use_container_width=True
-        )
+        try:
+            map_html = m._repr_html_()
+            st.download_button(
+                label="📥 Download Map as HTML",
+                data=map_html,
+                file_name=f"WDRI_Map_Nairobi_{year}.html",
+                mime="text/html",
+                use_container_width=True
+            )
+        except:
+            st.warning("Map download not available")
         
         st.markdown("---")
         
