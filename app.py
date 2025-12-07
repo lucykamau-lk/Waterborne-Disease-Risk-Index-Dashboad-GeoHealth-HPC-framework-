@@ -122,7 +122,7 @@ st.markdown(
 )
 
 BASE_DIR = "."
-MAPS_FOLDER = "classified_map"  # CHANGE THIS to match your actual folder name
+MAPS_FOLDER = "Classified_Maps"  # CHANGE THIS to match your actual folder name
 
 def get_wsi_colormap():
     colors = ["#00FF00", "#FFFF00", "#FFA500", "#FF0000"]
@@ -521,3 +521,4 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
