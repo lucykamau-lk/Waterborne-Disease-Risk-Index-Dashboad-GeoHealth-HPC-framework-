@@ -122,6 +122,7 @@ st.markdown(
 )
 
 BASE_DIR = "."
+MAPS_FOLDER = "classified_map"  # CHANGE THIS to match your actual folder name
 
 def get_wsi_colormap():
     colors = ["#00FF00", "#FFFF00", "#FFA500", "#FF0000"]
@@ -133,11 +134,6 @@ def get_wdri_colormap():
 
 def add_raster_to_map(map_obj, tif_path, name, opacity=0.7, layer_type="WSI"):
     try:
-        # Check if file exists first
-        if not os.path.exists(tif_path):
-            st.error(f"❌ File not found: {tif_path}")
-            return False, None
-            
         with rasterio.open(tif_path) as src:
             arr = src.read(1).astype(float)
             bounds = [[src.bounds.bottom, src.bounds.left],
@@ -173,36 +169,44 @@ def add_raster_to_map(map_obj, tif_path, name, opacity=0.7, layer_type="WSI"):
                 cross_origin=False,
                 show=True
             ).add_to(map_obj)
-            
-            st.success(f"✅ Loaded {name}")
+
             return True, bounds
 
     except Exception as e:
-        st.error(f"❌ Error loading {name}: {str(e)}")
-        import traceback
-        st.code(traceback.format_exc())
+        st.error(f"Error loading {name}: {str(e)}")
         return False, None
 
 def add_wards_to_map(map_obj):
     """Add Nairobi ward boundaries"""
+    # Try multiple possible locations
+    possible_paths = [
+        "Nairobi_Wards.geojson",  # Root folder
+        "Nairobi_Wards.shp",      # Root folder
+        os.path.join(MAPS_FOLDER, "Nairobi_Wards.geojson"),
+        os.path.join(MAPS_FOLDER, "Nairobi_Wards.shp"),
+        os.path.join("classified maps", "Nairobi_Wards.geojson"),
+        os.path.join("classified maps", "Nairobi_Wards.shp"),
+    ]
+    
     wards_path = None
-    for ext in ["shp", "geojson"]:
-        candidate =  os.path.join(BASE_DIR, "Classified_Maps", f"Nairobi_Wards.{ext}")
-        if os.path.exists(candidate):
-            wards_path = candidate
+    for path in possible_paths:
+        if os.path.exists(path):
+            wards_path = path
             break
-
+    
     if wards_path is None:
         st.warning("⚠️ Nairobi_Wards shapefile/geojson not found")
+        # Debug: Show what files exist
+        st.write("Looking for files in:", os.listdir("."))
+        if os.path.exists(MAPS_FOLDER):
+            st.write(f"Files in {MAPS_FOLDER}:", os.listdir(MAPS_FOLDER))
         return
 
     try:
         gdf = gpd.read_file(wards_path)
-                
         possible_names = ["name_3"]
         label_field = None
         
-        # Check if any column name contains "name_3" (case-insensitive)
         for col in gdf.columns:
             if any(key in col.lower() for key in possible_names):
                 label_field = col
@@ -278,90 +282,94 @@ with st.sidebar:
 col1, col2 = st.columns([8, 3], gap="small")
 
 with col1:
-    st.title(f"🌊 Nairobi Waterborne Disease Risk (WDRI) & Water Scarcity (WSI) Hotspots Map Viewer – {year}")
-    
-    # Create the map
-    m = folium.Map(
-        location=[-1.2864, 36.8172],
-        zoom_start=zoom_level,
-        tiles=basemap_options[basemap],
-        control_scale=True,
-    )
+    try:
+        st.title(f"🌊 Nairobi Waterborne Disease Risk Index (WDRI) & Water Scarcity Index (WSI) Hotspots Map Viewer – {year}")
+        
+        # Create the map
+        m = folium.Map(
+            location=[-1.2864, 36.8172],
+            zoom_start=zoom_level,
+            tiles=basemap_options[basemap],
+            control_scale=True,
+        )
 
-    # Add map plugins
-    minimap = MiniMap()
-    m.add_child(minimap)
+        # Add map plugins
+        minimap = MiniMap()
+        m.add_child(minimap)
 
-    if show_measure:
-        MeasureControl().add_to(m)
+        if show_measure:
+            MeasureControl().add_to(m)
 
-    Fullscreen().add_to(m)
+        Fullscreen().add_to(m)
 
-    layer_bounds = []
+        layer_bounds = []
 
-    # Layer file definitions
-    MAPS_FOLDER ="Classified_Maps"
-    layer_files = {
-        "WSI": {
-            2019: os.path.join(MAPS_FOLDER, "WSI_2019_CLASS.tif"),
-            2024: os.path.join(MAPS_FOLDER, "WSI_2024_CLASS.tif"),
-        },
-        "WDRI Wet": {
-            2019: os.path.join(MAPS_FOLDER, "WDRI_Wet_2019_CLASS.tif"),
-            2024: os.path.join(MAPS_FOLDER, "WDRI_Wet_2024_CLASS.tif"),
-        },
-        "WDRI Dry": {
-            2019: os.path.join(MAPS_FOLDER, "WDRI_Dry_2019_CLASS.tif"),
-            2024: os.path.join(MAPS_FOLDER, "WDRI_Dry_2024_CLASS.tif"),
-        },
-    }
+        # Layer file definitions - WITH FOLDER PATH
+        layer_files = {
+            "WSI": {
+                2019: os.path.join(MAPS_FOLDER, "WSI_2019_CLASS.tif"),
+                2024: os.path.join(MAPS_FOLDER, "WSI_2024_CLASS.tif"),
+            },
+            "WDRI Wet": {
+                2019: os.path.join(MAPS_FOLDER, "WDRI_Wet_2019_CLASS.tif"),
+                2024: os.path.join(MAPS_FOLDER, "WDRI_Wet_2024_CLASS.tif"),
+            },
+            "WDRI Dry": {
+                2019: os.path.join(MAPS_FOLDER, "WDRI_Dry_2019_CLASS.tif"),
+                2024: os.path.join(MAPS_FOLDER, "WDRI_Dry_2024_CLASS.tif"),
+            },
+        }
 
-    wsi_active = False
-    wdri_active = False
+        wsi_active = False
+        wdri_active = False
 
-    # Add raster layers to map
-    for layer, visible in st.session_state.layer_visibility.items():
-        if visible and layer in layer_files:
-            filename = layer_files[layer][year]
-            tif_path = os.path.join(BASE_DIR, filename)
-            
-            layer_type = "WSI" if layer == "WSI" else "WDRI"
-            
-            if layer == "WSI":
-                wsi_active = True
-            else:
-                wdri_active = True
+        # Add raster layers to map
+        for layer, visible in st.session_state.layer_visibility.items():
+            if visible and layer in layer_files:
+                filename = layer_files[layer][year]
+                
+                # Check if file exists
+                if not os.path.exists(filename):
+                    st.error(f"File not found: {filename}")
+                    continue
+                    
+                layer_type = "WSI" if layer == "WSI" else "WDRI"
+                
+                if layer == "WSI":
+                    wsi_active = True
+                else:
+                    wdri_active = True
 
-            success, bounds = add_raster_to_map(
-                m, tif_path, f"{layer} {year}", opacity=opacity, layer_type=layer_type
-            )
+                success, bounds = add_raster_to_map(
+                    m, filename, f"{layer} {year}", opacity=opacity, layer_type=layer_type
+                )
 
-            if success and bounds:
-                layer_bounds.append(bounds)
+                if success and bounds:
+                    layer_bounds.append(bounds)
 
-    # Add ward boundaries if enabled
-    if show_wards:
-        add_wards_to_map(m)
+        # Add ward boundaries if enabled
+        if show_wards:
+            add_wards_to_map(m)
 
-    # Fit map bounds to visible layers
-    if layer_bounds:
-        all_bounds = np.vstack(layer_bounds)
-        m.fit_bounds([
-            [all_bounds[:, 0].min(), all_bounds[:, 1].min()],
-            [all_bounds[:, 0].max(), all_bounds[:, 1].max()],
-        ])
+        # Fit map bounds to visible layers
+        if layer_bounds:
+            all_bounds = np.vstack(layer_bounds)
+            m.fit_bounds([
+                [all_bounds[:, 0].min(), all_bounds[:, 1].min()],
+                [all_bounds[:, 0].max(), all_bounds[:, 1].max()],
+            ])
 
-    # Add layer control
-    folium.LayerControl(position="topright").add_to(m)
-
-    # DEBUG: Show what layers were successfully added
-    st.write("**Debug Info:**")
-    st.write(f"Number of layers in map: {len(m._children)}")
-    st.write(f"Layer bounds collected: {len(layer_bounds)}")
-    st.write(f"Show wards: {show_wards}")
-
-    # Display the map - TALLER for better view
-    st_folium(m, use_container_width=True, height=750, key="main_map")
+        # Add layer control
+        folium.LayerControl(position="topright").add_to(m)
+        
+        # Display the map - TALLER for better view
+        st_folium(m, use_container_width=True, height=750, key="main_map")
+        
+    except Exception as e:
+        st.error(f"Error creating map: {str(e)}")
+        # Show a simple fallback map
+        m = folium.Map(location=[-1.2864, 36.8172], zoom_start=11)
+        st_folium(m, use_container_width=True, height=750, key="fallback_map")
 
 with col2:
     # Create tabs for better organization
@@ -405,14 +413,17 @@ with col2:
         st.markdown("### Map Tools")
         
         # Download button
-        map_html = m._repr_html_()
-        st.download_button(
-            label="📥 Download Map as HTML",
-            data=map_html,
-            file_name=f"WDRI_Map_Nairobi_{year}.html",
-            mime="text/html",
-            use_container_width=True
-        )
+        try:
+            map_html = m._repr_html_()
+            st.download_button(
+                label="📥 Download Map as HTML",
+                data=map_html,
+                file_name=f"WDRI_Map_Nairobi_{year}.html",
+                mime="text/html",
+                use_container_width=True
+            )
+        except:
+            st.warning("Map download not available")
         
         st.markdown("---")
         
@@ -509,7 +520,4 @@ st.markdown(
     </div>
     """,
     unsafe_allow_html=True
-
 )
-
-
