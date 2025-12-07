@@ -393,13 +393,13 @@ with col1:
 with col2:
     tab1, tab2 = st.tabs(["📊 Active Layers", "🛠️ Map Tools"])
     
-    with tab1:
-        st.markdown("### Active Layers")
-        
-        active_layers = [
-            layer for layer, visible in st.session_state.layer_visibility.items()
-            if visible
-        ]
+with tab1:
+    st.markdown("### Active Layers")
+    ...
+    if show_wards:
+        st.markdown("---")
+        st.markdown("**🗺️ Ward Boundaries**")
+        ...
         
         if active_layers:
             for layer in active_layers:
@@ -427,49 +427,23 @@ with col2:
             </div>
             """, unsafe_allow_html=True)
     
-    with tab2:
-        st.markdown("### Map Tools")
-        
-        # Download button
-        try:
-            map_html = m._repr_html_()
-            st.download_button(
-                label="📥 Download Map as HTML",
-                data=map_html,
-                file_name=f"WDRI_Map_Nairobi_{year}.html",
-                mime="text/html",
-                use_container_width=True
-            )
-        except:
-            st.warning("Map download not available")
-        
-        st.markdown("---")
-        
-        st.markdown("#### Current Settings")
-        st.markdown(f"""
-        <div class="card">
-            <div class="legend-item">
-                <div style="width: 8px; height: 8px; background-color: #3b82f6; border-radius: 50%; margin-right: 10px;"></div>
-                <span><strong>Year:</strong> {year}</span>
-            </div>
-            <div class="legend-item">
-                <div style="width: 8px; height: 8px; background-color: #8b5cf6; border-radius: 50%; margin-right: 10px;"></div>
-                <span><strong>Basemap:</strong> {basemap}</span>
-            </div>
-            <div class="legend-item">
-                <div style="width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; margin-right: 10px;"></div>
-                <span><strong>Opacity:</strong> {opacity}</span>
-            </div>
-            <div class="legend-item">
-                <div style="width: 8px; height: 8px; background-color: #f59e0b; border-radius: 50%; margin-right: 10px;"></div>
-                <span><strong>Zoom Level:</strong> {zoom_level}</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        
-        st.markdown("#### Map Legends")
+with tab2:
+    st.markdown(
+        '<h3 style="color:#f9fafb; margin-bottom:0.5rem;">Map Tools</h3>',
+        unsafe_allow_html=True,
+    )
+    ...
+    st.markdown(
+        '<h4 style="color:#f9fafb; margin-top:0.5rem;">Current Settings</h4>',
+        unsafe_allow_html=True,
+    )
+    ...
+    st.markdown("---")
+    st.markdown(
+        '<h4 style="color:#f9fafb; margin-top:0.5rem;">Map Legends</h4>',
+        unsafe_allow_html=True,
+    )
+
         
         if wsi_active:
             st.markdown("**WSI (Water Scarcity)**")
@@ -537,6 +511,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 
 
