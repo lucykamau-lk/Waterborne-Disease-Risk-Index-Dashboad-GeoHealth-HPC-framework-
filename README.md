@@ -11,7 +11,7 @@
 
 ## 📋 Project Overview
 This project develops a **Python-based computational framework** to quantify and visualize ward-level waterborne disease risk in **Nairobi, Kenya** at **30m resolution**.  
-It integrates **Earth-observation EO and demographic data ** into a weighted composite index (WDRI) and presents results via an **interactive Streamlit dashboard**.  
+It integrates Earth-observation EO and demographic data into a weighted composite index (WDRI) and presents results via an **interactive Streamlit dashboard**.  
 
 The framework is designed to be **scalable**, enabling extension from local ward-level analysis to regional or global studies.
 
