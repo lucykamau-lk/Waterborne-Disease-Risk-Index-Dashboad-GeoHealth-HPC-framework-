@@ -75,7 +75,7 @@ Pipeline features:
 
 ## 🎬 Live Demo
 - **Slides**: [Link to presentation slides]  
-- **Dashboard**: [Streamlit Cloud deployment link]  
+- **Dashboard**: [Streamlit Cloud deployment link](https://csc-593-programming-for-scientist-jjsiyxj7dngjhkddetpyjh.streamlit.app/)  
 
 
 
