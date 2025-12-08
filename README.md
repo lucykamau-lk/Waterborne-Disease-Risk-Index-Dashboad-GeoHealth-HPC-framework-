@@ -77,14 +77,5 @@ Pipeline features:
 - **Slides**: [Link to presentation slides]  
 - **Dashboard**: [Streamlit Cloud deployment link]  
 
----
 
-## 🚀 Installation
 
-```bash
-# Clone repository
-git clone https://github.com/YOUR-USERNAME/wdri-dashboard.git
-cd wdri-dashboard
-
-# Install dependencies
-pip install -r requirements.txt
