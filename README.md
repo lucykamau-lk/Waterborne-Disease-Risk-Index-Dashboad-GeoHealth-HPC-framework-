@@ -37,7 +37,7 @@ All datasets are **open-source and publicly available**:
 - **Demographics**: SEDAC / WorldPop  
 - **Boundaries**: GADM4  
 - **Water Access**: JMP / NWS  
-- Access via **Google Earth Engine (GEE)** and provider portals  
+- Access via **Google Earth Engine (GEE)**   
 
 ---
 
