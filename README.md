@@ -1,4 +1,4 @@
-# 🌍 Waterborne Disease Risk Index (WDRI) Dashboard
+# 🌍 Waterborne Disease Risk Index (WDRI) & Water Scarcity Index (WSI) Dashboard
 
 **High-resolution GeoHealth framework for scalable urban health vulnerability assessment**
 
