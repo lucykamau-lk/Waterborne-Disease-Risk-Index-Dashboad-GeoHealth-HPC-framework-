@@ -11,7 +11,7 @@
 
 ## 📋 Project Overview
 This project develops a **Python-based computational framework** to quantify and visualize ward-level waterborne disease risk in **Nairobi, Kenya** at **30m resolution**.  
-It integrates **Earth-observation and demographic data** into a weighted composite index (WDRI) and presents results via an **interactive Streamlit dashboard**.  
+It integrates **Earth-observation EO and demographic data ** into a weighted composite index (WDRI) and presents results via an **interactive Streamlit dashboard**.  
 
 The framework is designed to be **scalable**, enabling extension from local ward-level analysis to regional or global studies.
 
@@ -24,9 +24,10 @@ The framework is designed to be **scalable**, enabling extension from local ward
   - 🌡️ Land-surface temperature (LST)  
   - 🏙️ Built-up area (LULC)  
   - 👥 Population density  
-  - 🚰 Water access deficiency  
+  - 🚰 Water access 
+  - socioeconomic vulnerability
 - Validate results against known cholera hotspots  
-- Provide exportable risk maps and tables  
+- Provide exportable risk maps as HTML
 
 ---
 
@@ -35,7 +36,7 @@ All datasets are **open-source and publicly available**:
 - **Satellite EO**: Landsat, VIIRS, MODIS, IMERG  
 - **Demographics**: SEDAC / WorldPop  
 - **Boundaries**: GADM4  
-- **Water Access**: JMP / KNBS  
+- **Water Access**: JMP / NWS  
 - Access via **Google Earth Engine (GEE)** and provider portals  
 
 ---
@@ -44,7 +45,7 @@ All datasets are **open-source and publicly available**:
 - **Data Handling**: `xarray`, `pandas`, `geopandas`, `rasterio`  
 - **Math & Scaling**: `numpy`, `scikit-learn`  
 - **Visualization**: `matplotlib`, `plotly`, `folium`, `streamlit`  
-- **HPC Scalability**: `dask` parallel processing for performance gains  
+- **HPC Scalability**: `dask` parallel processing for high performance 
 
 Pipeline features:
 - Automated data ingestion  
@@ -55,17 +56,14 @@ Pipeline features:
 ---
 
 ## 📊 Dashboard
-- Interactive visualization of WDRI maps  
-- Ward-level risk tables  
-- Scalable from local to regional/global analysis  
-
+- Interactive visualization of WDRI and WSI maps  
+- Zoommable maps 
 ---
 
 ## ✅ Success Criteria
 - Automated pipeline generates normalized 30m resolution maps  
 - Spatial correlation with cholera hotspots  
-- Exportable results for policy and research  
-
+- Exportable maps as HTML for policy and research  
 ---
 
 ## 🔒 Ethics & Safety
@@ -77,7 +75,6 @@ Pipeline features:
 
 ## 🎬 Live Demo
 - **Slides**: [Link to presentation slides]  
-- **Video**: [YouTube demo link]  
 - **Dashboard**: [Streamlit Cloud deployment link]  
 
 ---
