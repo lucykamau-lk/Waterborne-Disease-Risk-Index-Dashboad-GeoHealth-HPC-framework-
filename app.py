@@ -9,7 +9,7 @@ import matplotlib.colors as mcolors
 import geopandas as gpd
 import traceback
 
-st.set_page_config(page_title="WDRI Map Viewer", layout="wide", page_icon="🌊")
+st.set_page_config(page_title="WDRI Map Viewer", layout="wide", page_icon="💧🦠")
 
 # ----------------- GLOBAL STYLES -----------------
 st.markdown(
@@ -536,5 +536,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
 
 
