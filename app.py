@@ -292,7 +292,7 @@ col1, col2 = st.columns([8, 3], gap="small")
 
 with col1:
     st.title(
-        f"🌊 Nairobi Waterborne Disease Risk (WDRI) & Water Scarcity (WSI) Hotspots Map Viewer – {year}"
+        f"💧🦠Nairobi Waterborne Disease Risk (WDRI) & Water Scarcity (WSI) Hotspots Map Viewer – {year}"
     )
 
     try:
@@ -536,6 +536,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
 
 
 
