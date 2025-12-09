@@ -3,7 +3,7 @@
 **High-resolution GeoHealth framework for scalable urban health vulnerability assessment**
 
 [![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-red)]()
-[![Dask](https://img.shields.io/badge/Dask-Parallel-orange)]()
+[![Dask](https://img.shields.io/badge/HPC-orange)]()
 [![License](https://img.shields.io/badge/License-MIT-yellow)]()
 
 ---
