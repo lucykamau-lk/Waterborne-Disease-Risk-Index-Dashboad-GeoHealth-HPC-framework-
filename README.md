@@ -2,15 +2,11 @@
 
 **High-resolution GeoHealth framework for scalable urban health vulnerability assessment**
 
-[![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-red)]()
-[![Dask](https://img.shields.io/badge/HPC-orange)]()
-[![License](https://img.shields.io/badge/License-MIT-yellow)]()
-
 ---
 
 ## 📋 Project Overview
 This project develops a **Python-based computational framework** to quantify and visualize ward-level waterborne disease risk in **Nairobi, Kenya** at **30m resolution**.  
-It integrates Earth-observation EO and demographic data into a weighted composite index (WDRI) and presents results via an **interactive Streamlit dashboard**.  
+It integrates Earth-observation EO and water access data into a weighted composite index (WDRI) and presents results via an **interactive Streamlit dashboard**.  
 
 The framework is designed to be **scalable**, enabling extension from local ward-level analysis to regional or global studies.
 
@@ -35,7 +31,7 @@ All datasets are **open-source and publicly available**:
 - **Satellite EO**: Landsat, VIIRS, MODIS, IMERG  
 - **Demographics**: SEDAC / WorldPop  
 - **Boundaries**: GADM4  
-- **Water Access**: JMP / NWS  
+- **Water Access**: NWS  
 - Access via **Google Earth Engine (GEE)**   
 
 ---
@@ -43,8 +39,8 @@ All datasets are **open-source and publicly available**:
 ## 🛠️ Technical Approach
 - **Data Handling**: `xarray`, `pandas`, `geopandas`, `rasterio`  
 - **Math & Scaling**: `numpy`, `scikit-learn`  
-- **Visualization**: `matplotlib`, `plotly`, `folium`, `streamlit`  
-- **HPC**: Parallel processing for high performance 
+- **Visualization**: `matplotlib`, `plotly`, `streamlit`  
+- **HPC**: Processing for high performance 
 
 Pipeline features:
 - Automated data ingestion  
