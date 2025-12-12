@@ -17,16 +17,16 @@ The framework is designed to be **scalable**, enabling extension from local ward
 ---
 
 ## 🎯 Objectives
-- Build a reproducible pipeline for WDRI computation  
-- Normalize, weigh, and aggregate five critical indicators:  
+- Build a reproducible pipeline for WDRI/WSI computation  
+- Reprroject, Clip, Normalize, Resample and Weigh, and aggregate EO data:  
   - 🌧️ Rainfall variability  
   - 🌡️ Land-surface temperature (LST)  
   - 🏙️ Built-up area (LULC)  
   - 👥 Population density  
   - 🚰 Water access 
   - socioeconomic vulnerability
-- Validate results against known cholera hotspots  
-- Provide exportable risk maps as HTML
+  - Validate results against known cholera hotspots  
+  - Provide exportable risk maps as HTML
 
 ---
 
@@ -44,7 +44,7 @@ All datasets are **open-source and publicly available**:
 - **Data Handling**: `xarray`, `pandas`, `geopandas`, `rasterio`  
 - **Math & Scaling**: `numpy`, `scikit-learn`  
 - **Visualization**: `matplotlib`, `plotly`, `folium`, `streamlit`  
-- **HPC Scalability**: `dask` parallel processing for high performance 
+- **HPC**: Parallel processing for high performance 
 
 Pipeline features:
 - Automated data ingestion  
