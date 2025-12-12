@@ -20,7 +20,7 @@ The framework is designed to be **scalable**, enabling extension from local ward
   - 🏙️ Built-up area (LULC)  
   - 👥 Population density  
   - 🚰 Water access 
-  - socioeconomic vulnerability
+  - Socioeconomic vulnerability
   - Validate results against known cholera hotspots  
   - Provide exportable risk maps as HTML
 
