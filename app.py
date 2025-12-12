@@ -11,7 +11,6 @@ import traceback
 
 st.set_page_config(page_title="WDRI Map Viewer", layout="wide", page_icon="💧🦠")
 
-# ----------------- GLOBAL STYLES -----------------
 st.markdown(
     """
     <style>
@@ -128,7 +127,7 @@ st.markdown(
 
 BASE_DIR = "."
 
-# ----------------- HELPERS -----------------
+#help
 def get_wsi_colormap():
     colors = ["#00FF00", "#FFFF00", "#FFA500", "#FF0000"]
     return mcolors.ListedColormap(colors)
@@ -250,7 +249,7 @@ def add_wards_to_map(map_obj):
         st.error(f"❌ Error loading Nairobi_Wards layer: {e}")
         st.code(traceback.format_exc())
 
-# ----------------- SESSION STATE -----------------
+# Active State
 if "layer_visibility" not in st.session_state:
     st.session_state.layer_visibility = {
         "WSI": True,
@@ -258,7 +257,7 @@ if "layer_visibility" not in st.session_state:
         "WDRI Dry": True,
     }
 
-# ----------------- SIDEBAR -----------------
+# Sidebar
 with st.sidebar:
     st.header("🌍 Map Controls")
 
@@ -287,7 +286,7 @@ with st.sidebar:
     zoom_level = st.slider("Zoom Level", 5, 18, 11)
     show_measure = st.checkbox("Enable Measurement Tool", False)
 
-# ----------------- MAIN LAYOUT -----------------
+#The Main layout
 col1, col2 = st.columns([8, 3], gap="small")
 
 with col1:
@@ -372,7 +371,7 @@ with col1:
 with col2:
     tab1, tab2 = st.tabs(["📊 Active Layers", "🛠️ Map Tools"])
 
-    # ---------- TAB 1: MAP TOOLS (Download + Legends + Current Settings) ----------
+    # TAB 1: MAP TOOLS (Download HTML Map + Legends + Current Settings)
     with tab1:
         st.markdown("### Map Tools")
 
@@ -389,7 +388,7 @@ with col2:
         except Exception:
             st.warning("Map download not available")
 
-        # --- MAP LEGENDS FIRST ---
+        # Map legend
         st.markdown("---")
         st.markdown("#### Map Legends")
 
@@ -441,7 +440,7 @@ with col2:
                 unsafe_allow_html=True,
             )
 
-        # --- THEN CURRENT SETTINGS ---
+        # current setting
         st.markdown("---")
         st.markdown("#### Current Settings")
         st.markdown(
@@ -484,7 +483,7 @@ with col2:
                 unsafe_allow_html=True,
             )
 
-    # ---------- TAB 2: ACTIVE LAYERS ----------
+    # Tab 2: Active Layers
     with tab2:
         st.markdown("### Active Layers")
 
@@ -526,7 +525,7 @@ with col2:
                 unsafe_allow_html=True,
             )
 
-# ----------------- FOOTER -----------------
+# Footer
 st.markdown("---")
 st.markdown(
     """
@@ -536,6 +535,7 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
 
 
 
